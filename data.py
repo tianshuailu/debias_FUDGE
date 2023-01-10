@@ -225,7 +225,7 @@ class Dataset:
         elif self.female_classifier:
             self.vocab['placeholder'] = 1 # anything so we don't crash
             train, val, test = [], [], []
-            for category, label in [('female.it.txt', 1), ('male.it.txt', 0)]:
+            for category, label in [('female.all.txt', 1), ('male.all.txt', 0)]:
                 with open(os.path.join(args.data_dir, category), 'r') as rf:
                     for i, line in enumerate(rf):
                         if i >= 0 and i < 1000:
