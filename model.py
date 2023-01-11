@@ -57,8 +57,8 @@ class Model(nn.Module):
                 cp = torch.load(os.path.join(args.model_path_or_name, "pytorch_model.bin"))
                 self.mt5_embed = nn.Embedding.from_pretrained(cp['shared.weight'], padding_idx=0)
                 del cp
-            self.rnn = nn.LSTM(HIDDEN_DIM, HIDDEN_DIM, num_layers=3, bidirectional=False, dropout=0.1) # want it to be causal so we can learn all positions
-            # self.attention = nn.MultiheadAttention(HIDDEN_DIM, 4)
+            self.rnn = nn.LSTM(HIDDEN_DIM, HIDDEN_DIM//2, num_layers=3, bidirectional=True, dropout=0.1) # want it to be causal so we can learn all positions
+            self.attention = nn.MultiheadAttention(HIDDEN_DIM, 4)
             self.out_linear = nn.Linear(HIDDEN_DIM, 1)
         elif self.female_classifier:
             self.mt5_embed = nn.Embedding(vocab_size, HIDDEN_DIM, padding_idx=0)
