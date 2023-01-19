@@ -210,12 +210,12 @@ class Dataset:
         elif self.male_classifier:
             self.vocab['placeholder'] = 1 # anything so we don't crash
             train, val, test = [], [], []
-            for category, label in [('male.all.txt', 1), ('female.all.txt', 0)]:
+            for category, label in [('mo_5-200.txt', 1), ('fo_5-200.txt', 0)]:
                 with open(os.path.join(args.data_dir, category), 'r') as rf:
                     for i, line in enumerate(rf):
-                        if i >= 0 and i < 1000:
+                        if i >= 0 and i < 2000:
                             val.append((line.strip(), label))
-                        elif i >= 1000 and i < 2000:
+                        elif i >= 2000 and i < 4000:
                             test.append((line.strip(), label))
                         else:
                             train.append((line.strip(), label))
@@ -225,12 +225,12 @@ class Dataset:
         elif self.female_classifier:
             self.vocab['placeholder'] = 1 # anything so we don't crash
             train, val, test = [], [], []
-            for category, label in [('female.all.txt', 1), ('male.all.txt', 0)]:
+            for category, label in [('fo_5-200.txt', 1), ('mo_5-200.txt', 0)]:
                 with open(os.path.join(args.data_dir, category), 'r') as rf:
                     for i, line in enumerate(rf):
-                        if i >= 0 and i < 1000:
+                        if i >= 0 and i < 2000:
                             val.append((line.strip(), label))
-                        elif i >= 1000 and i < 2000:
+                        elif i >= 2000 and i < 4000:
                             test.append((line.strip(), label))
                         else:
                             train.append((line.strip(), label))

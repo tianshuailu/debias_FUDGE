@@ -58,12 +58,20 @@ class Model(nn.Module):
                 self.mt5_embed = nn.Embedding.from_pretrained(cp['shared.weight'], padding_idx=0)
                 del cp
             self.rnn = nn.LSTM(HIDDEN_DIM, HIDDEN_DIM//2, num_layers=3, bidirectional=True, dropout=0.1) # want it to be causal so we can learn all positions
-            self.attention = nn.MultiheadAttention(HIDDEN_DIM, 4)
-            self.out_linear = nn.Linear(HIDDEN_DIM, 1)
+            #self.attention = nn.MultiheadAttention(HIDDEN_DIM, 4)
+            self.out_linear = nn.Linear(HIDDEN_DIM, HIDDEN_DIM)
+            #self.out_linear = nn.Linear(HIDDEN_DIM, HIDDEN_DIM)
+            self.out_linear2 = nn.Linear(HIDDEN_DIM, 1)
+            #self.nonlinear = nn.ReLU()
         elif self.female_classifier:
-            self.mt5_embed = nn.Embedding(vocab_size, HIDDEN_DIM, padding_idx=0)
-            self.rnn = nn.LSTM(HIDDEN_DIM, HIDDEN_DIM, num_layers=3, bidirectional=False, dropout=0.5) # want it to be causal so we can learn all positions
-            self.out_linear = nn.Linear(HIDDEN_DIM, 1)
+            cp = torch.load(os.path.join(args.model_path_or_name, "pytorch_model.bin"))
+            self.mt5_embed = nn.Embedding.from_pretrained(cp['shared.weight'], padding_idx=0)
+            del cp
+            self.rnn = nn.LSTM(HIDDEN_DIM, HIDDEN_DIM, num_layers=3, bidirectional=False, dropout=0.1) # want it to be causal so we can learn all positions
+            #self.attention = nn.MultiheadAttention(HIDDEN_DIM, 4)
+            self.out_linear = nn.Linear(HIDDEN_DIM, HIDDEN_DIM)
+            #self.out_linear = nn.Linear(HIDDEN_DIM, HIDDEN_DIM)
+            self.out_linear2 = nn.Linear(HIDDEN_DIM, 1)
         ###################
         elif self.simplify: # BART models use built-in pad token, vocab size stays the same!
             if glove_embeddings is None:
@@ -157,14 +165,14 @@ class Model(nn.Module):
             rnn_output, _ = self.rnn(inputs)
             rnn_output, _ = pad_packed_sequence(rnn_output)
             rnn_output = rnn_output.permute(1, 0, 2) # batch x seq x 300
-            return self.out_linear(rnn_output).squeeze(2)
+            return self.out_linear2(self.out_linear(rnn_output)).squeeze(2)
         elif self.female_classifier:
             inputs = self.mt5_embed(inputs) # batch x seq x hidden_dim
             inputs = pack_padded_sequence(inputs.permute(1, 0, 2), lengths.cpu(), enforce_sorted=False)
             rnn_output, _ = self.rnn(inputs)
             rnn_output, _ = pad_packed_sequence(rnn_output)
             rnn_output = rnn_output.permute(1, 0, 2) # batch x seq x 300
-            return self.out_linear(rnn_output).squeeze(2)
+            return self.out_linear2(self.out_linear(rnn_output)).squeeze(2)
         ###################
         elif self.simplify:
             inputs = self.bart_embed(inputs) # batch x seq x hidden_dim
