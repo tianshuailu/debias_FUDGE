@@ -13,7 +13,7 @@ Considers options for the following params:
 # - soft vs. hard
 
 Example Call:
-    
+
     python hp_search.py \
         --condition_model /srv/scratch6/kew/ats/fudge/discriminators/wiki100M_bart_glove \
         --generation_model /srv/scratch6/kew/ats/fudge/generators/bart_large_paraNMT_filt_fr \
@@ -30,10 +30,10 @@ import pandas as pd
 import numpy as np
 from types import SimpleNamespace
 
-from transformers import BartTokenizer, BartForConditionalGeneration
+from transformers import MT5Tokenizer, MT5ForConditionalGeneration
 
 from model import Model
-from predict_simplify import predict_simplicity, generation_arg_parser
+from predict_debias import predict_debiasing, generation_arg_parser
 from simplification_evaluation import *
 from perplexity import distilGPT2_perplexity_score
 
@@ -54,16 +54,18 @@ def chunker(iterable, batch_size=1):
 if __name__ == '__main__':
 
     parser = generation_arg_parser(description="SimpleFUDGE")
-    
+
     parser.add_argument('--log_to_file', action='store_true', required=False, help='whether or not to send logs to file `outpath/hp_search.log`. If not, logs are printed to stdout')
     parser.add_argument('--outpath', type=str, default=None, required=True, help='output file for results csv')
     parser.add_argument('--batch_size', type=int, default=1, required=False, help='number of lines to process as a batch for prediction')
     parser.add_argument('--max_lines', type=int, default=-1, required=False, help='number of lines from validation file to process for generation')
 
-    parser.add_argument('--data_dir', type=str, default='/srv/scratch6/kew/ats/data/en/aligned', required=False, help='directory containing aligned test/validation files')
+    parser.add_argument('--src_dir', type=str, default=None, required=True, help='directory containing aligned test/validation files')
+    parser.add_argument('--ref_dir', type=str, default=None, required=True, help='directory containing aligned test/validation files')
 
-    parser.add_argument('--datasets', type=str, 
-        default=['asset_validation','turk_validation','newsela_manual_v0_v4_dev', 'wiki_manual_dev'], 
+
+    parser.add_argument('--datasets', type=str,
+        default=None,
         required=False, nargs='*', help='names of test/validation files to run inference on')
 
     args = parser.parse_args()
@@ -77,8 +79,8 @@ if __name__ == '__main__':
         logging.basicConfig(format='%(asctime)s | %(levelname)s: %(message)s', level=logging.NOTSET)
 
     logger.info(f'Loading generation model')
-    tokenizer = BartTokenizer.from_pretrained(args.generation_model)
-    generator_model = BartForConditionalGeneration.from_pretrained(args.generation_model, return_dict=True).to(args.device)
+    tokenizer = MT5Tokenizer.from_pretrained(args.generation_model)
+    generator_model = MT5ForConditionalGeneration.from_pretrained(args.generation_model, return_dict=True).to(args.device)
     generator_model.eval()
 
     logger.info(f'Loading conditioning model')
@@ -91,10 +93,10 @@ if __name__ == '__main__':
     conditioning_model.eval()
 
     results = []
-    
+
     vargs = vars(args)
     for dataset in args.datasets:
-        infile = Path(args.data_dir) / f'{dataset}.tsv'
+        infile = Path(args.data_dir) / f'{dataset}.txt'
         if infile.exists():
             logger.info(f'Running hp sweep on {dataset}...')
             for condition_lambda in condition_lambda_sweep:
@@ -115,9 +117,9 @@ if __name__ == '__main__':
 
                     logger.info(f'Number of development instances: {len(src_sents)}')
 
-                    hyp_sents = []                    
+                    hyp_sents = []
                     for batch in chunker(src_sents, args.batch_size):
-                        outputs = predict_simplicity(generator_model, tokenizer, conditioning_model, batch, SimpleNamespace(**vargs))
+                        outputs = predict_debiasing(generator_model, tokenizer, conditioning_model, batch, SimpleNamespace(**vargs))
                         hyp_sents.extend(outputs)
 
                     lresults = {}
@@ -150,9 +152,3 @@ if __name__ == '__main__':
     logger.info(f'Writing Dataframe to {results_output_file}...')
     df = pd.DataFrame(results)
     df.to_csv(results_output_file)
-
-
-
-
-
-

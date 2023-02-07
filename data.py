@@ -210,7 +210,7 @@ class Dataset:
         elif self.male_classifier:
             self.vocab['placeholder'] = 1 # anything so we don't crash
             train, val, test = [], [], []
-            for category, label in [('mo_5-200.txt', 1), ('fo_5-200.txt', 0)]:
+            for category, label in [('male.all.txt', 1), ('female.all.txt', 0)]:
                 with open(os.path.join(args.data_dir, category), 'r') as rf:
                     for i, line in enumerate(rf):
                         if i >= 0 and i < 2000:

@@ -183,14 +183,14 @@ def main(args):
         epoch = 0
         loss, acc, prec, rec, f1, auc, label_balance = validate(model, dataset, criterion, epoch, args, logger)
         print(f'{time.ctime()} | EVALUATION | Epoch {epoch} | loss {loss:.4f} | acc {acc:.4f} | prec {prec:.4f} | rec {rec:.4f} | f1 {f1:.4f} | auc = {auc:.4f} | pos ratio {label_balance:.4f}')
+
         return
     for epoch in range(args.epochs):
         print(f'{time.ctime()} | TRAINING | Epoch {epoch} |')
         data_start_index = train(model, dataset, optimizer, criterion, epoch, args, data_start_index, logger)
         if epoch % args.validation_freq == 0:
             loss, acc, prec, rec, f1, auc, label_balance = validate(model, dataset, criterion, epoch, args, logger)
-            print(f'{time.ctime()} | VALIDATION | Epoch {epoch} | loss {loss:.4f} | acc {acc:.4f} | prec {prec:.4f} | rec {rec:.4f} | f1 {f1:.4f} | auc = {auc:.4f} | pos ratio {label_balance:.4f}')
-
+            print(f'{time.ctime()} | EVALUATION | Epoch {epoch} | loss {loss:.4f} | acc {acc:.4f} | prec {prec:.4f} | rec {rec:.4f} | f1 {f1:.4f} | auc = {auc:.4f} | pos ratio {label_balance:.4f}')
 
             if not args.debug:
                 if loss < best_val_metric:

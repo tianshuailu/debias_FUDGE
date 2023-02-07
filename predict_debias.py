@@ -56,7 +56,7 @@ def generation_arg_parser(description=None):
     parser.add_argument('--length_penalty', type=float, default=1.0, help='Exponential penalty to the length. 1.0 means no penalty. Set to values < 1.0 in order to encourage the model to generate shorter sequences, to a value > 1.0 in order to encourage the model to produce longer sequences.')
     parser.add_argument('--num_beam_groups', type=int, default=1, help='Number of groups to divide `num_beams` into in order to ensure diversity among different groups of beams. See [this paper](https://arxiv.org/pdf/1610.02424.pdf) for more details. NOTE: not working with FUDGE')
     parser.add_argument('--temperature', type=float, default=1.0, help='temperature used to modify logits for generation.')
-    parser.add_argument('--min_length', type=int, default=10, help='minimum length of target sequence, used to instantiate a MinLengthLogitProcessor')
+    parser.add_argument('--min_length', type=int, default=3, help='minimum length of target sequence, used to instantiate a MinLengthLogitProcessor')
 
     ############################
     # stochastic decoing params:
@@ -84,7 +84,7 @@ def predict_debiasing(model, tokenizer, conditioning_model, input_text, args):
 
         batch_size = len(input_text) # infer batch size
         # print(batch_size)
-        encoder_inputs = tokenizer(input_text, return_tensors='pt', max_length=128, truncation=True, padding=True).to(args.device)
+        encoder_inputs = tokenizer(input_text, return_tensors='pt', max_length=512, truncation=True, padding=True).to(args.device)
 
         model_kwargs = {
             "encoder_outputs": model.get_encoder()(encoder_inputs['input_ids'].repeat_interleave(args.num_beams, dim=0), return_dict=True)
@@ -183,12 +183,12 @@ def predict_debiasing(model, tokenizer, conditioning_model, input_text, args):
 
             else: # regular geedy decoding with FUDGE
                 # NOTE: should be the same as original implementation
-                raise NotImplementedError(f"Greedy search currently not implemented!")
-                # outputs = model.greedy_search(
-                #     decoder_input_ids,
-                #     logits_processor=logits_processor,
-                #     **model_kwargs
-                #     )
+                #raise NotImplementedError(f"Greedy search currently not implemented!")
+                outputs = model.greedy_search(
+                    decoder_input_ids,
+                    logits_processor=logits_processor,
+                    **model_kwargs
+                    )
 
         return tokenizer.batch_decode(outputs, skip_special_tokens=True, clean_up_tokenization_spaces=True)
 
