@@ -1,6 +1,6 @@
 # Debias_FUDGE
 
-This repository provides code for applying [FUDGE](https://github.com/yangkevin2/naacl-2021-fudge-controlled-generation) to reduce gender bias in NMT. Many of the scripts were also adapted from [SimpleFUDGE](https://github.com/ZurichNLP/SimpleFUDGE).
+This repository provides code for applying Future Discriminators for Generation, [FUDGE](https://github.com/yangkevin2/naacl-2021-fudge-controlled-generation) to reduce gender bias in NMT. Many of the scripts were also adapted from [SimpleFUDGE](https://github.com/ZurichNLP/SimpleFUDGE).
 
 To set up the environment, please refer to [FUDGE](https://github.com/yangkevin2/naacl-2021-fudge-controlled-generation).
 
