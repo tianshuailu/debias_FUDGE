@@ -2,7 +2,7 @@
 
 This repository provides code for applying [FUDGE](https://github.com/yangkevin2/naacl-2021-fudge-controlled-generation) to reduce gender bias in NMT. Many of the scripts were also adapted from [SimpleFUDGE](https://github.com/ZurichNLP/SimpleFUDGE).
 
-To setup the environment, please refer to [FUDGE](https://github.com/yangkevin2/naacl-2021-fudge-controlled-generation).
+To set up the environment, please refer to [FUDGE](https://github.com/yangkevin2/naacl-2021-fudge-controlled-generation).
 
 ## Data Preprocessing
 
@@ -22,7 +22,7 @@ to split the utterances into sentences, then use
 ```
 ./data_processing/deduplicate.py
 ```
-to remove the dupilcate sentences. Finally use
+to remove the dupilcated sentences. Finally, use
 ```
 ./data_processing/filter_non_adj.py
 ```
@@ -30,11 +30,11 @@ and
 ```
 ./data_processing/filter_non_participle.py
 ```
-to filter out the senences that do not contain adjectives or participles.
+to filter out sentences that do not contain adjectives or participles.
 
 ## Baseline
 
-First we trim mT5-small with the dictionary
+First, we trim mT5-small with the dictionary
 ```
 ./trim_mt5/dict_25k.txt
 ```
@@ -109,6 +109,6 @@ And when condition_lambda = 0, the output of FUDGE is the same as the underlying
 
 ## MuST-SHE Evaluation
 
-For both the word-level Parts-Of-Speech evaluation and the agreement level evaluation, please refer to [MuST-SHE](https://ict.fbk.eu/must-she/) for more detail.
+For both the word-level Parts-Of-Speech evaluation and the agreement-level evaluation, please refer to [MuST-SHE](https://ict.fbk.eu/must-she/) for more detail.
 
 
