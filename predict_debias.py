@@ -200,6 +200,7 @@ def main(args):
 
     if args.condition_model:
         condition_model_ckpt = Path(args.condition_model) / 'model_best.pth.tar'
+        #condition_model_ckpt = Path(args.condition_model) / 'pytorch_model.bin'
         checkpoint = torch.load(condition_model_ckpt, map_location=args.device)
         model_args = checkpoint['args']
         conditioning_model = Model(model_args, tokenizer.pad_token_id, tokenizer.vocab_size) # no need to get the glove embeddings when reloading since they're saved in model ckpt anyway

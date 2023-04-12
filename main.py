@@ -11,7 +11,6 @@ import torch
 import torch.nn as nn
 from sklearn.metrics import roc_curve, roc_auc_score, accuracy_score, precision_recall_fscore_support
 
-
 from data import Dataset
 # from data_v2 import SimplificationDataset as Dataset
 from model import Model
@@ -54,8 +53,10 @@ def train(model, dataset, optimizer, criterion, epoch, args, data_start_index, l
         loss.backward()
         optimizer.step()
         loss_meter.update(loss.detach(), len(labels))
+        lr = optimizer.param_groups[0]['lr']
         if logger is not None:
             logger.log({'train_loss': loss})
+            logger.log({'learning_rate': lr})
         if batch_num % args.train_print_freq == 0:
             progress.display(batch_num)
     progress.display(total_length)
@@ -185,6 +186,8 @@ def main(args):
         print(f'{time.ctime()} | EVALUATION | Epoch {epoch} | loss {loss:.4f} | acc {acc:.4f} | prec {prec:.4f} | rec {rec:.4f} | f1 {f1:.4f} | auc = {auc:.4f} | pos ratio {label_balance:.4f}')
 
         return
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 5)
+    #scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor = 0.5, patience = 2)
     for epoch in range(args.epochs):
         print(f'{time.ctime()} | TRAINING | Epoch {epoch} |')
         data_start_index = train(model, dataset, optimizer, criterion, epoch, args, data_start_index, logger)
@@ -213,6 +216,7 @@ def main(args):
                 #     'data_start_index': data_start_index,
                 #     'args': args
                 # }, os.path.join(args.save_dir, 'model_epoch' + str(epoch) + '.pth.tar'))
+        scheduler.step()
 
     print(f'{time.ctime()} | COMPLETED TRAINING |')
 

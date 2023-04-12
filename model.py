@@ -3,6 +3,7 @@ import os
 import numpy as np
 
 import torch
+from torch import Tensor
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
@@ -49,29 +50,22 @@ class Model(nn.Module):
             self.out_linear = nn.Linear(HIDDEN_DIM, 1)
         ###################
         elif self.male_classifier:
-            #HIDDEN_DIM = 32
-            if isinstance(glove_embeddings, str):
-                glove_embeddings = np.load(glove_embeddings)
-                self.mt5_embed = nn.Embedding.from_pretrained(torch.from_numpy(glove_embeddings), padding_idx=1)
-            else:
-                cp = torch.load(os.path.join(args.model_path_or_name, "pytorch_model.bin"))
-                self.mt5_embed = nn.Embedding.from_pretrained(cp['shared.weight'], padding_idx=0)
-                del cp
-            self.rnn = nn.LSTM(HIDDEN_DIM, HIDDEN_DIM//2, num_layers=3, bidirectional=True, dropout=0.1) # want it to be causal so we can learn all positions
-            self.attention = nn.MultiheadAttention(HIDDEN_DIM, 4)
-            self.out_linear = nn.Linear(HIDDEN_DIM, HIDDEN_DIM)
-            #self.out_linear = nn.Linear(HIDDEN_DIM, HIDDEN_DIM)
-            self.out_linear2 = nn.Linear(HIDDEN_DIM, 1)
-            #self.nonlinear = nn.ReLU()
+            cp = torch.load(os.path.join(args.model_path_or_name, "pytorch_model.bin"))
+            self.mt5_embed = nn.Embedding.from_pretrained(cp['shared.weight'], padding_idx=0)
+            del cp
+            self.rnn = nn.LSTM(HIDDEN_DIM, HIDDEN_DIM, num_layers=3, bidirectional=False, dropout=0.5)
+            self.out_linear = nn.Linear(HIDDEN_DIM, 1)
         elif self.female_classifier:
             cp = torch.load(os.path.join(args.model_path_or_name, "pytorch_model.bin"))
             self.mt5_embed = nn.Embedding.from_pretrained(cp['shared.weight'], padding_idx=0)
             del cp
+            """
             self.d_model = HIDDEN_DIM
-            encoder_layer = nn.TransformerEncoderLayer(d_model=512, nhead=8)
-            self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=6)
-
-            #self.rnn = nn.LSTM(HIDDEN_DIM, HIDDEN_DIM//2, num_layers=3, bidirectional=True, dropout=0.1) # want it to be causal so we can learn all positions
+            self.pos_encoder = PositionalEncoding(self.d_model, 0.1)
+            encoder_layer = nn.TransformerEncoderLayer(d_model=self.d_model, nhead=2)
+            self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=1)
+            """
+            self.rnn = nn.LSTM(HIDDEN_DIM, HIDDEN_DIM, num_layers=3, bidirectional=False, dropout=0.5) # want it to be causal so we can learn all positions
 
             self.out_linear = nn.Linear(HIDDEN_DIM, 1)
         ###################
@@ -167,17 +161,21 @@ class Model(nn.Module):
             rnn_output, _ = self.rnn(inputs)
             rnn_output, _ = pad_packed_sequence(rnn_output)
             rnn_output = rnn_output.permute(1, 0, 2) # batch x seq x 300
-            return self.out_linear2(self.out_linear(rnn_output)).squeeze(2)
+            return self.out_linear(rnn_output).squeeze(2)
         elif self.female_classifier:
+            """
             inputs = self.mt5_embed(inputs) * math.sqrt(self.d_model)
+            inputs = self.pos_encoder(inputs)
             encoder_out = self.transformer_encoder(inputs)
-            encoder_out = encoder_out.permute(1, 0, 2) # batch x seq x 300
-
-            #inputs = pack_padded_sequence(inputs.permute(1, 0, 2), lengths.cpu(), enforce_sorted=False)
-            #rnn_output, _ = self.rnn(inputs)
-            #rnn_output, _ = pad_packed_sequence(rnn_output)
-            #rnn_output = rnn_output.permute(1, 0, 2) # batch x seq x 300
             return self.out_linear(encoder_out).squeeze(2)
+            """
+            inputs = self.mt5_embed(inputs) # batch x seq x hidden_dim
+            inputs = pack_padded_sequence(inputs.permute(1, 0, 2), lengths.cpu(), enforce_sorted=False)
+            rnn_output, _ = self.rnn(inputs)
+            rnn_output, _ = pad_packed_sequence(rnn_output)
+            rnn_output = rnn_output.permute(1, 0, 2) # batch x seq x 300
+            return self.out_linear(rnn_output).squeeze(2)
+
         ###################
         elif self.simplify:
             inputs = self.bart_embed(inputs) # batch x seq x hidden_dim
@@ -228,3 +226,24 @@ class Model(nn.Module):
             return self.out_linear3(self.nonlinear(self.out_linear2(self.nonlinear(self.out_linear(hidden))))).squeeze(2)
         else:
             raise NotImplementedError
+
+class PositionalEncoding(nn.Module):
+
+    def __init__(self, d_model: int, dropout: float = 0.1, max_len: int = 5000):
+        super().__init__()
+        self.dropout = nn.Dropout(p=dropout)
+
+        position = torch.arange(max_len).unsqueeze(1)
+        div_term = torch.exp(torch.arange(0, d_model, 2) * (-math.log(10000.0) / d_model))
+        pe = torch.zeros(max_len, 1, d_model)
+        pe[:, 0, 0::2] = torch.sin(position * div_term)
+        pe[:, 0, 1::2] = torch.cos(position * div_term)
+        self.register_buffer('pe', pe)
+
+    def forward(self, x: Tensor) -> Tensor:
+        """
+        Args:
+            x: Tensor, shape [seq_len, batch_size, embedding_dim]
+        """
+        x = x + self.pe[:x.size(0)]
+        return self.dropout(x)
