@@ -3,7 +3,8 @@
 
 """
 
-Author: Tannon Kew
+Adapted from the code by Tannon Kew:
+https://github.com/ZurichNLP/SimpleFUDGE
 
 """
 
