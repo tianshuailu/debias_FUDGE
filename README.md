@@ -1,8 +1,8 @@
 # Debias_FUDGE
 
-This repository provides code for applying Future Discriminators for Generation, [FUDGE](https://github.com/yangkevin2/naacl-2021-fudge-controlled-generation), to reduce gender bias in NMT. Many of the scripts were also adapted from [SimpleFUDGE](https://github.com/ZurichNLP/SimpleFUDGE).
+This repository provides code for applying Future Discriminators for Generation, [FUDGE](https://github.com/yangkevin2/naacl-2021-fudge-controlled-generation), to reduce gender bias emerging when translating from English to a language that openly marks the gender of the speaker. The model is evaluated with BLEU and MuST-SHE, a novel gender translation evaluation method. The results demonstrate improvements in the translation accuracy of the feminine terms. 
 
-To set up the environment, please refer to [FUDGE](https://github.com/yangkevin2/naacl-2021-fudge-controlled-generation).
+Many of the scripts were also adapted from [SimpleFUDGE](https://github.com/ZurichNLP/SimpleFUDGE). To set up the environment, please refer to [FUDGE](https://github.com/yangkevin2/naacl-2021-fudge-controlled-generation).
 
 ## Data Preprocessing
 
