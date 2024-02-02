@@ -111,4 +111,15 @@ And when condition_lambda = 0, the output of FUDGE is the same as the underlying
 
 For both the word-level Parts-Of-Speech evaluation and the agreement-level evaluation, please refer to [MuST-SHE](https://ict.fbk.eu/must-she/) for more detail.
 
-
+## Citation
+```
+@inproceedings{lu-etal-2023-reducing,
+    title = {Reducing Gender Bias in NMT with FUDGE},
+    author = {Lu, Tianshuai and Aepli, No{\"e}mi and Rios, Annette},
+    booktitle = {Proceedings of the First Workshop on Gender-Inclusive Translation Technologies},
+    month = {June},
+    year = {2023},
+    publisher = {European Association for Machine Translation},
+    url = {https://aclanthology.org/2023.gitt-1.6}
+}
+```
